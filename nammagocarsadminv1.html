@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NammaGo Analytics Backend Console</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+body { font-family: 'Plus Jakarta Sans', sans-serif; }
+@media (prefers-color-scheme: dark) {
+body { background-color: #0b0f19; color: #f8fafc; }
+.glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
+.text-adaptive-heading { color: #ffffff !important; }
+.text-adaptive-body { color: #cbd5e1 !important; }
+.text-adaptive-muted { color: #94a3b8 !important; }
+}
+@media (prefers-color-scheme: light) {
+body { background-color: #f8fafc; color: #0f172a; }
+.glass-card { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0, 0, 0, 0.08); backdrop-filter: blur(20px); }
+.text-adaptive-heading { color: #0f172a !important; }
+.text-adaptive-body { color: #334155 !important; }
+.text-adaptive-muted { color: #64748b !important; }
+}
+</style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto">
+<!-- Auth View Gate -->
+<div id="authGate" class="glass-card max-w-md mx-auto rounded-3xl p-8 text-center my-20">
+<i data-lucide="shield-check" class="w-12 h-12 text-orange-500 mx-auto mb-4"></i>
+<h2 class="text-2xl font-bold text-adaptive-heading mb-6">Operations Control Desk</h2>
+<input type="password" id="passCode" placeholder="••••••••" class="w-full text-center bg-white/40 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-xl py-3 px-4 mb-4 text-slate-900 dark:text-white focus:outline-none">
+<button onclick="handleAuth()" class="w-full py-3 bg-orange-500 text-white font-bold rounded-xl shadow-lg">Access Ecosystem</button>
+</div>
+
+<!-- Dashboard Panel View -->
+<div id="adminPanel" class="hidden space-y-8">
+<div class="glass-card rounded-3xl p-6 flex justify-between items-center">
+<h1 class="text-2xl font-extrabold text-adaptive-heading">NammaGo Control Desk Engine</h1>
+<button onclick="logout()" class="py-2 px-4 bg-red-600 text-white font-bold text-xs rounded-xl">Logout</button>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="flex gap-3 border-b border-black/5 dark:border-white/10 pb-2">
+<button onclick="switchTab('cars')" class="tab-item font-bold text-sm py-2 px-4 border-b-2 border-orange-500 text-orange-500">Fleet Inventory</button>
+<button onclick="switchTab('ledger')" class="tab-item font-bold text-sm py-2 px-4 border-b-2 border-transparent text-adaptive-muted">Revenue & Ledgers</button>
+<button onclick="switchTab('reviews')" class="tab-item font-bold text-sm py-2 px-4 border-b-2 border-transparent text-adaptive-muted">Reviews Cards</button>
+<button onclick="switchTab('legal')" class="tab-item font-bold text-sm py-2 px-4 border-b-2 border-transparent text-adaptive-muted">Legal Sheets Content</button>
+</div>
+
+<!-- TAB 1: FLEET MANAGER -->
+<div id="carsTabSection" class="space-y-4">
+<div class="flex justify-between items-center"><h3 class="text-xl font-bold text-adaptive-heading">Manage Car Listings</h3><button onclick="openCarModal()" class="py-2 px-4 bg-orange-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl">Add Vehicle</button></div>
+<div class="glass-card rounded-3xl p-6 overflow-x-auto">
+<table class="w-full text-left border-collapse text-sm">
+<thead><tr class="border-b text-adaptive-muted"><th class="p-3">ID</th><th class="p-3">Vehicle</th><th class="p-3">Price / Day</th><th class="p-3">Status</th><th class="p-3 text-right">Actions</th></tr></thead>
+<tbody id="carTableRows"></tbody>
+</table>
+</div>
+</div>
+
+<!-- TAB 2: DIGITAL REVENUE ACCOUNTING LEDGER BOOK -->
+<div id="ledgerTabSection" class="space-y-6 hidden">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="glass-card p-6 rounded-2xl border-l-4 border-emerald-500"><span class="text-xs font-bold uppercase text-adaptive-muted">Monthly Revenue Summation</span><h2 id="monthRevSum" class="text-3xl font-extrabold text-adaptive-heading mt-2">₹0</h2></div>
+<div class="glass-card p-6 rounded-2xl border-l-4 border-orange-500"><span class="text-xs font-bold uppercase text-adaptive-muted">Yearly Revenue Summation</span><h2 id="yearRevSum" class="text-3xl font-extrabold text-adaptive-heading mt-2">₹0</h2></div>
+</div>
+<div class="glass-card p-4 rounded-2xl flex flex-wrap gap-4 items-center">
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Filter by Car</label><select id="ledgerCarFilter" onchange="renderLedgerRows()" class="bg-white dark:bg-slate-900 text-sm p-2 rounded border"><option value="All">All Cars</option></select></div>
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Filter by Month</label><select id="ledgerMonthFilter" onchange="renderLedgerRows()" class="bg-white dark:bg-slate-900 text-sm p-2 rounded border"><option value="All">All Months</option><option value="0">January</option><option value="1">February</option><option value="2">March</option><option value="3">April</option><option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option><option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option></select></div>
+</div>
+<div class="glass-card rounded-3xl p-6 overflow-x-auto">
+<table class="w-full text-left border-collapse text-sm">
+<thead><tr class="border-b text-adaptive-muted"><th class="p-3">Registered Time</th><th class="p-3">Car Model</th><th class="p-3">Customer</th><th class="p-3">Booking Period</th><th class="p-3">Revenue</th></tr></thead>
+<tbody id="ledgerTableRows"></tbody>
+</table>
+</div>
+</div>
+
+<!-- TAB 3: REVIEWS -->
+<div id="reviewsTabSection" class="space-y-4 hidden">
+<div class="flex justify-between items-center"><h3 class="text-xl font-bold text-adaptive-heading">Manage Testimonial Reviews</h3><button onclick="openReviewModal()" class="py-2 px-4 bg-orange-500 text-white font-bold text-xs rounded-xl">Add New Review</button></div>
+<div class="glass-card rounded-3xl p-6 overflow-x-auto">
+<table class="w-full text-left border-collapse text-sm">
+<thead><tr class="border-b text-adaptive-muted"><th class="p-3">ID</th><th class="p-3">Customer</th><th class="p-3">Review Text</th><th class="p-3 text-right">Actions</th></tr></thead>
+<tbody id="reviewTableRows"></tbody>
+</table>
+</div>
+</div>
+
+<!-- TAB 4: LEGAL CONTENTS -->
+<div id="legalTabSection" class="space-y-4 hidden">
+<h3 class="text-xl font-bold text-adaptive-heading">Update Site Information Content Pages</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="glass-card p-4 rounded-2xl flex flex-col gap-2"><span class="font-bold text-sm text-adaptive-heading">About Us Narrative</span><textarea id="legal_about" class="w-full h-32 text-slate-900 p-2 text-xs rounded border"></textarea><button onclick="saveLegalText('about')" class="mt-2 py-2 px-4 bg-orange-500 text-white font-bold text-xs rounded-xl self-end">Update Sheet</button></div>
+<div class="glass-card p-4 rounded-2xl flex flex-col gap-2"><span class="font-bold text-sm text-adaptive-heading">Contact Block</span><textarea id="legal_contact" class="w-full h-32 text-slate-900 p-2 text-xs rounded border"></textarea><button onclick="saveLegalText('contact')" class="mt-2 py-2 px-4 bg-orange-500 text-white font-bold text-xs rounded-xl self-end">Update Sheet</button></div>
+<div class="glass-card p-4 rounded-2xl flex flex-col gap-2"><span class="font-bold text-sm text-adaptive-heading">Privacy Rules</span><textarea id="legal_privacy" class="w-full h-32 text-slate-900 p-2 text-xs rounded border"></textarea><button onclick="saveLegalText('privacy')" class="mt-2 py-2 px-4 bg-orange-500 text-white font-bold text-xs rounded-xl self-end">Update Sheet</button></div>
+<div class="glass-card p-4 rounded-2xl flex flex-col gap-2"><span class="font-bold text-sm text-adaptive-heading">Terms & Conditions</span><textarea id="legal_terms" class="w-full h-32 text-slate-900 p-2 text-xs rounded border"></textarea><button onclick="saveLegalText('terms')" class="mt-2 py-2 px-4 bg-orange-500 text-white font-bold text-xs rounded-xl self-end">Update Sheet</button></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Modals (Car Entry Form) -->
+<div id="carModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+<div class="glass-card w-full max-w-xl rounded-3xl p-6 relative max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white">
+<h3 class="text-xl font-bold text-adaptive-heading mb-4">Mutate Vehicle Records</h3>
+<form onsubmit="handleCarSubmit(event)" class="space-y-4">
+<input type="hidden" id="carIdField">
+<div class="grid grid-cols-2 gap-4">
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Model Name</label><input type="text" id="cModel" required class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl"></div>
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Body Layout</label><select id="cType" class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl"><option>SUV</option><option>Hatchback</option><option>Sedan</option></select></div>
+</div>
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Image URLs (Up to 10 entries separated by commas)</label><textarea id="cImages" required placeholder="url1, url2" class="w-full h-20 bg-white dark:bg-slate-900 border p-2 text-xs rounded-xl"></textarea></div>
+<div class="grid grid-cols-3 gap-2">
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Price Per Day</label><input type="number" id="cPrice" required class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl"></div>
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Passengers</label><input type="number" id="cSeats" required class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl"></div>
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Fuel Type</label><input type="text" id="cFuel" required class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Transmission</label><select id="cTrans" class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl"><option>Manual</option><option>Automatic</option></select></div>
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Status</label><select id="cStatus" class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl"><option>Available</option><option>Booked</option></select></div>
+</div>
+<div class="border p-3 rounded-xl bg-orange-500/5 space-y-2">
+<span class="text-xs font-bold text-orange-500">Bookout Block (Populates revenue ledgers automatically)</span>
+<div class="grid grid-cols-2 gap-2">
+<div><label class="block text-[10px] font-bold">Customer Full Name</label><input type="text" id="cCustName" class="w-full bg-white dark:bg-slate-900 border p-1 text-xs rounded"></div>
+<div><label class="block text-[10px] font-bold">Customer Phone</label><input type="tel" id="cCustPhone" class="w-full bg-white dark:bg-slate-900 border p-1 text-xs rounded"></div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div><label class="block text-[10px] font-bold">Booked From</label><input type="date" id="cFrom" class="w-full bg-white dark:bg-slate-900 border p-1 text-xs rounded"></div>
+<div><label class="block text-[10px] font-bold">Booked To</label><input type="date" id="cTo" class="w-full bg-white dark:bg-slate-900 border p-1 text-xs rounded"></div>
+</div>
+</div>
+<div class="flex gap-2 justify-end"><button type="button" onclick="closeCarModal()" class="py-2 px-4 bg-slate-500 text-white text-xs font-bold rounded-xl">Cancel</button><button type="submit" class="py-2 px-6 bg-orange-500 text-white text-xs font-bold rounded-xl">Save Records</button></div>
+</form>
+</div>
+</div>
+
+<!-- Add Review Modal Container -->
+<div id="reviewModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+<div class="glass-card w-full max-w-md rounded-3xl p-6 relative">
+<h3 class="text-xl font-bold text-adaptive-heading mb-4">Add Customer Testimonial Review</h3>
+<form onsubmit="handleReviewSubmit(event)" class="space-y-4">
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Customer Identifier Name</label><input type="text" id="rName" required class="w-full bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl text-slate-900 dark:text-white"></div>
+<div><label class="block text-xs font-bold text-adaptive-muted mb-1">Review Description Text</label><textarea id="rText" required class="w-full h-24 bg-white dark:bg-slate-900 border p-2 text-sm rounded-xl text-slate-900 dark:text-white"></textarea></div>
+<div class="flex gap-2 justify-end"><button type="button" onclick="closeReviewModal()" class="py-2 px-4 bg-slate-500 text-white text-xs font-bold rounded-xl">Cancel</button><button type="submit" class="py-2 px-6 bg-orange-500 text-white text-xs font-bold rounded-xl">Save</button></div>
+</form>
+</div>
+</div>
+
+<script>
+const API_LINK = 'https://script.google.com/macros/s/AKfycbz_dLcK1FBlH-rm738kZQONCi40JVO7j03nhtocys8dGLga8rQwYJ-CY-ACHdid2Xp_/exec';
+let database = { cars: [], reviews: [], legal: [], ledger: [] };
+let verifiedPass = '';
+
+function handleAuth() {
+verifiedPass = document.getElementById('passCode').value;
+if(!verifiedPass) return alert("Credentials mandatory");
+document.getElementById('authGate').classList.add('hidden');
+document.getElementById('adminPanel').classList.remove('hidden');
+fetchAdminMatrix();
+}
+
+function logout() {
+verifiedPass = ''; document.getElementById('passCode').value = '';
+document.getElementById('adminPanel').classList.add('hidden');
+document.getElementById('authGate').classList.remove('hidden');
+}
+
+async function fetchAdminMatrix() {
+try {
+const res = await fetch(API_LINK);
+database = await res.json();
+renderTableData();
+populateLegalFields();
+buildLedgerFilters();
+renderLedgerRows();
+} catch {
+alert("Please configure Apps Script API link to process active server data streams.");
+}
+}
+
+function switchTab(tabId) {
+document.getElementById('carsTabSection').classList.toggle('hidden', tabId !== 'cars');
+document.getElementById('ledgerTabSection').classList.toggle('hidden', tabId !== 'ledger');
+document.getElementById('reviewsTabSection').classList.toggle('hidden', tabId !== 'reviews');
+document.getElementById('legalTabSection').classList.toggle('hidden', tabId !== 'legal');
+}
+
+function renderTableData() {
+const carBody = document.getElementById('carTableRows'); carBody.innerHTML = '';
+database.cars.forEach(c => {
+carBody.insertAdjacentHTML('beforeend', `
+<tr class="border-b border-black/5 dark:border-white/5">
+<td class="p-3 font-bold">${c.ID}</td>
+<td class="p-3 font-semibold text-adaptive-heading">${c.Model}</td>
+<td class="p-3 font-bold">₹${Number(c.Price).toLocaleString('en-IN')}</td>
+<td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.Status === 'Booked' ? 'bg-orange-500/20 text-orange-500' : 'bg-emerald-500/20 text-emerald-500'}">${c.Status}</span></td>
+<td class="p-3 text-right">
+<button onclick="editCar(${c.ID})" class="text-blue-500 mr-2"><i data-lucide="edit" class="w-4 h-4 inline"></i></button>
+<button onclick="deleteOperation('deleteCar', ${c.ID})" class="text-red-500"><i data-lucide="trash" class="w-4 h-4 inline"></i></button>
+</td>
+</tr>
+`);
+});
+
+const revBody = document.getElementById('reviewTableRows'); revBody.innerHTML = '';
+database.reviews.forEach(r => {
+revBody.insertAdjacentHTML('beforeend', `
+<tr class="border-b border-black/5 dark:border-white/5">
+<td class="p-3 font-bold">${r.ID}</td>
+<td class="p-3 font-semibold text-adaptive-heading">${r.Name}</td>
+<td class="p-3 text-xs max-w-xs truncate">${r.Text}</td>
+<td class="p-3 text-right"><button onclick="deleteOperation('deleteReview', ${r.ID})" class="text-red-500"><i data-lucide="trash" class="w-4 h-4 inline"></i></button></td>
+</tr>
+`);
+});
+lucide.createIcons();
+}
+
+function buildLedgerFilters() {
+const carSelect = document.getElementById('ledgerCarFilter');
+carSelect.innerHTML = '<option value="All">All Cars</option>';
+const distinctModels = [...new Set(database.ledger.map(l => l.CarModel))];
+distinctModels.forEach(m => { carSelect.insertAdjacentHTML('beforeend', `<option value="${m}">${m}</option>`); });
+}
+
+function renderLedgerRows() {
+const tbody = document.getElementById('ledgerTableRows'); tbody.innerHTML = '';
+const carFilter = document.getElementById('ledgerCarFilter').value;
+const monthFilter = document.getElementById('ledgerMonthFilter').value;
+
+let totalMonthRevenue = 0;
+let totalYearRevenue = 0;
+const currentYear = new Date().getFullYear();
+const currentMonth = new Date().getMonth();
+
+database.ledger.forEach(l => {
+const dateObj = new Date(l.Timestamp);
+const matchesCar = carFilter === 'All' || l.CarModel === carFilter;
+const matchesMonth = monthFilter === 'All' || dateObj.getMonth() == Number(monthFilter);
+
+if (dateObj.getFullYear() === currentYear) {
+totalYearRevenue += Number(l.Revenue || 0);
+if (dateObj.getMonth() === currentMonth) {
+totalMonthRevenue += Number(l.Revenue || 0);
+}
+}
+
+if (matchesCar && matchesMonth) {
+tbody.insertAdjacentHTML('beforeend', `
+<tr class="border-b border-black/5 dark:border-white/5">
+<td class="p-3 text-xs">${new Date(l.Timestamp).toLocaleString()}</td>
+<td class="p-3 text-adaptive-heading font-semibold">${l.CarModel}</td>
+<td class="p-3">${l.CustomerName} <span class="text-xs text-slate-400">(${l.Contact})</span></td>
+<td class="p-3 text-xs">${l.FromDate} to ${l.ToDate}</td>
+<td class="p-3 font-bold text-emerald-500">₹${Number(l.Revenue).toLocaleString('en-IN')}</td>
+</tr>
+`);
+}
+});
+
+document.getElementById('monthRevSum').innerText = `₹${totalMonthRevenue.toLocaleString('en-IN')}`;
+document.getElementById('yearRevSum').innerText = `₹${totalYearRevenue.toLocaleString('en-IN')}`;
+}
+
+function populateLegalFields() {
+database.legal.forEach(l => { const el = document.getElementById('legal_' + l.Key); if(el) el.value = l.Content; });
+}
+
+function openCarModal() { document.getElementById('carIdField').value = ''; document.getElementById('carForm').reset(); document.getElementById('carModal').classList.replace('hidden', 'flex'); }
+function closeCarModal() { document.getElementById('carModal').classList.replace('flex', 'hidden'); }
+function openReviewModal() { document.getElementById('reviewModal').classList.replace('hidden', 'flex'); }
+function closeReviewModal() { document.getElementById('reviewModal').classList.replace('flex', 'hidden'); }
+
+function editCar(id) {
+const c = database.cars.find(item => Number(item.ID) === id);
+if(!c) return;
+document.getElementById('carIdField').value = c.ID;
+document.getElementById('cModel').value = c.Model;
+document.getElementById('cType').value = c.Type;
+document.getElementById('cImages').value = c.Images;
+document.getElementById('cPrice').value = c.Price;
+document.getElementById('cSeats').value = c.Seats;
+document.getElementById('cFuel').value = c.Fuel;
+document.getElementById('cTrans').value = c.Transmission;
+document.getElementById('cStatus').value = c.Status;
+document.getElementById('cFrom').value = c.BookedFrom || '';
+document.getElementById('cTo').value = c.BookedTo || '';
+document.getElementById('carModal').classList.replace('hidden', 'flex');
+}
+
+async function handleCarSubmit(e) {
+e.preventDefault();
+const fromD = new Date(document.getElementById('cFrom').value);
+const toD = new Date(document.getElementById('cTo').value);
+const days = Math.max(1, Math.ceil((toD - fromD) / (1000 * 60 * 60 * 24)));
+const calculatedRev = days * Number(document.getElementById('cPrice').value);
+
+const payload = {
+password: verifiedPass, action: document.getElementById('carIdField').value ? "updateCar" : "addCar",
+id: document.getElementById('carIdField').value || undefined,
+model: document.getElementById('cModel').value, type: document.getElementById('cType').value,
+images: document.getElementById('cImages').value, price: Number(document.getElementById('cPrice').value),
+status: document.getElementById('cStatus').value, seats: document.getElementById('cSeats').value,
+transmission: document.getElementById('cTrans').value, fuel: document.getElementById('cFuel').value,
+bookedFrom: document.getElementById('cFrom').value, bookedTo: document.getElementById('cTo').value,
+rating: "4.9", custName: document.getElementById('cCustName').value, custPhone: document.getElementById('cCustPhone').value,
+calculatedRevenue: calculatedRev
+};
+sendPayload(payload);
+closeCarModal();
+}
+
+async function handleReviewSubmit(e) {
+e.preventDefault();
+sendPayload({ password: verifiedPass, action: "addReview", name: document.getElementById('rName').value, text: document.getElementById('rText').value, stars: 5 });
+closeReviewModal();
+}
+
+async function saveLegalText(key) { sendPayload({ password: verifiedPass, action: "updateLegal", key: key, content: document.getElementById('legal_' + key).value }); }
+async function deleteOperation(action, id) { if(confirm("Execute permanent entry structural row removal?")) sendPayload({ password: verifiedPass, action: action, id: id }); }
+
+async function sendPayload(obj) {
+await fetch(API_LINK, { method: 'POST', mode: 'no-cors', body: JSON.stringify(obj) });
+alert("Record update committed!");
+setTimeout(fetchAdminMatrix, 1000);
+}
+</script>
+</body>
+</html>
